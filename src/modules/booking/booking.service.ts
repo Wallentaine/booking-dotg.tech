@@ -177,7 +177,7 @@ export class BookingService {
     seatCount: number;
   }) {
     for (let i = 1; i <= standQueueDto.seatCount; i++) {
-      await this.amqpConnection.publish('', 'booking.queue', standQueueDto);
+      await this.amqpConnection.publish('booking.queue', '', standQueueDto);
     }
   }
 
