@@ -101,12 +101,10 @@ export class BookingService {
         endPoint: to,
       });
 
-      if (!trains) {
+      if (!trains?.length) {
         this.logger.warn(`Not found trains by query ${from} ${to} ${date}`);
         return null;
       }
-
-      this.logger.log('Trains from tcompany =>', trains);
 
       for (const train of trains) {
         const wagons = await this.tcompanyService.getWagonInfoByTrainId(
@@ -166,7 +164,18 @@ export class BookingService {
     return existingTrains;
   }
 
-  public async inQueue() {}
+  public async standQueue(standQueueDto: {
+    dateFrom: string;
+    dateTo: string;
+    from: string;
+    to: string;
+    priceFrom: number;
+    priceTo: number;
+    wagonType: 'PLATZCART' | 'COUPE';
+    seatCount: number;
+  }) {
+    throw new Error('Method not implemented.');
+  }
 
   public async inNearQueue() {}
 

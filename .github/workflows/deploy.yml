@@ -1,0 +1,47 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Setup SSH
+        run: |
+          eval $(ssh-agent -s)
+          ssh-add <(echo "${{ secrets.SSH_PRIVATE_KEY }}")
+        shell: bash
+
+      - name: Create SSH directory and known_hosts file
+        run: |
+          mkdir -p /home/runner/.ssh
+          chmod 700 /home/runner/.ssh
+          touch /home/runner/.ssh/known_hosts
+
+      - name: Add server key to known_hosts
+        run: |
+          ssh-keyscan -H -p ${{ secrets.SERVER_PORT }} -t ed25519 ${{ secrets.SERVER_IP }} >> /home/runner/.ssh/known_hosts
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+
+      - name: Connect to Server
+        run: |
+          set -e
+          sshpass -p ${{ secrets.SERVER_PASS }} ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }} -p ${{ secrets.SERVER_PORT }} "cd booking-dotg.tech/ && git pull"
+        env:
+          SSHPASS: ${{ secrets.SERVER_PASS }}
+
+      - name: Restart Docker Compose
+        run: |
+          set -e
+          sshpass -p ${{ secrets.SERVER_PASS }} ssh ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }} -p ${{secrets.SERVER_PORT}} "cd booking-dotg.tech/ && docker compose build && docker compose up -d && docker system prune -f"

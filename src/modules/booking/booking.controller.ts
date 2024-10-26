@@ -42,7 +42,18 @@ export class BookingController {
 
   // Встать в очередь
   @MessagePattern('booking.stand.queue')
-  public async inQueue() {}
+  public async inQueue(standQueueDto: {
+    dateFrom: string;
+    dateTo: string;
+    from: string;
+    to: string;
+    priceFrom: number;
+    priceTo: number;
+    wagonType: 'COUPE' | 'PLATZCART';
+    seatCount: number;
+  }) {
+    await this.bookingService.standQueue(standQueueDto);
+  }
 
   // Расширяется список параметров для постановки в очередь
   @MessagePattern('booking.stand.near.queue')
