@@ -1,11 +1,13 @@
 import { TCompanyService } from '@modules/tcompany/tcompany.service';
 import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DetailedRoute, WagonInfoWithSeats } from './booking.types';
 import { convertToYYYYMMDD, formatDateToString } from '@libs/utils';
 
 @Injectable()
 export class BookingService {
+  private readonly logger = new Logger(BookingService.name);
+
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: CacheStore,
     private readonly tcompanyService: TCompanyService,
@@ -100,8 +102,11 @@ export class BookingService {
       });
 
       if (!trains) {
+        this.logger.warn(`Not found trains by query ${from} ${to} ${date}`);
         return null;
       }
+
+      this.logger.log('Trains from tcompany =>', trains);
 
       for (const train of trains) {
         const wagons = await this.tcompanyService.getWagonInfoByTrainId(
@@ -127,6 +132,7 @@ export class BookingService {
       });
 
       if (!trainsByDate) {
+        this.logger.warn(`Not found trains by date ${from} ${to} ${date}`);
         return null;
       }
 
