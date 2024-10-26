@@ -1,6 +1,6 @@
 services:
-  jobhire-gateway:
-    container_name: jobhire-gateway
+  dotg-booking:
+    container_name: dotg-booking
     build:
       context: .
       dockerfile: ./docker/prod/Dockerfile
