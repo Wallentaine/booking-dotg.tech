@@ -1,0 +1,11 @@
+services:
+  jobhire-gateway:
+    container_name: jobhire-gateway
+    build:
+      context: .
+      dockerfile: ./docker/prod/Dockerfile
+    environment:
+      NODE_ENV: production
+    ports:
+      - 5051:5051
+    restart: on-failure

@@ -1,0 +1,18 @@
+services:
+  jobhire-gateway:
+    container_name: jobhire-gateway
+    build:
+      context: .
+      dockerfile: ./docker/dev/Dockerfile
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./:/app
+      - ./node_modules:/app/node_modules
+    ports:
+      - 5051:5051
+    networks:
+      - local_network
+
+networks:
+  local_network:
