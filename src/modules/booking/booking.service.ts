@@ -3,6 +3,7 @@ import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DetailedRoute, WagonInfoWithSeats } from './booking.types';
 import { convertToYYYYMMDD, formatDateToString } from '@libs/utils';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
 export class BookingService {
@@ -10,6 +11,7 @@ export class BookingService {
 
   constructor(
     @Inject(CACHE_MANAGER) private readonly cacheManager: CacheStore,
+    private readonly amqpConnection: AmqpConnection,
     private readonly tcompanyService: TCompanyService,
   ) {}
 
@@ -174,7 +176,9 @@ export class BookingService {
     wagonType: 'PLATZCART' | 'COUPE';
     seatCount: number;
   }) {
-    throw new Error('Method not implemented.');
+    for (let i = 1; i <= standQueueDto.seatCount; i++) {
+      await this.amqpConnection.publish('', 'booking.queue', standQueueDto);
+    }
   }
 
   public async inNearQueue() {}
