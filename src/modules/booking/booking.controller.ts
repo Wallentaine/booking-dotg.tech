@@ -55,7 +55,8 @@ export class BookingController {
     seatCount: number;
   }) {
     this.logger.log('getted data', standQueueDto);
-    return await this.bookingService.standQueue(standQueueDto);
+    await this.bookingService.standQueue(standQueueDto);
+    return { message: 'stand to queue' };
   }
 
   // Расширяется список параметров для постановки в очередь
