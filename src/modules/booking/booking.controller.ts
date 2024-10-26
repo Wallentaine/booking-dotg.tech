@@ -14,12 +14,12 @@ export class BookingController {
   }: {
     from: string;
     to: string;
-    date: Date;
+    date: string;
   }) {
     return await this.bookingService.search({
       from,
       to,
-      date,
+      date: new Date(date),
     });
   }
 
