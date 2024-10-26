@@ -1,4 +1,172 @@
-import { Injectable } from '@nestjs/common';
+import { TCompanyService } from '@modules/tcompany/tcompany.service';
+import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
+import { Inject, Injectable } from '@nestjs/common';
+import { DetailedRoute, WagonInfoWithSeats } from './booking.types';
+import { convertToYYYYMMDD, formatDateToString } from '@libs/utils';
 
 @Injectable()
-export class BookingService {}
+export class BookingService {
+  constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: CacheStore,
+    private readonly tcompanyService: TCompanyService,
+  ) {}
+
+  private async setTrains(
+    {
+      from,
+      to,
+      date,
+    }: {
+      from: string;
+      to: string;
+      date: string;
+    },
+    trainInfo: {
+      wagons_info: WagonInfoWithSeats[];
+      train_id: number;
+      global_route: string;
+      startpoint_departure: string;
+      endpoint_arrival: string;
+      detailed_route: DetailedRoute[];
+      available_seats_count: number;
+    },
+  ) {
+    const existingTrains = await this.getTrains({ from, to, date });
+
+    await this.cacheManager.set(
+      `${from}.${to}.${date}`,
+      [...(existingTrains ? existingTrains : []), trainInfo],
+      {
+        ttl: 30,
+      },
+    );
+  }
+
+  private async getTrains({
+    from,
+    to,
+    date,
+  }: {
+    from: string;
+    to: string;
+    date: string;
+  }): Promise<
+    | {
+        wagons_info: WagonInfoWithSeats[];
+        train_id: number;
+        global_route: string;
+        startpoint_departure: string;
+        endpoint_arrival: string;
+        detailed_route: DetailedRoute[];
+        available_seats_count: number;
+      }[]
+    | null
+  > {
+    const trains = await this.cacheManager.get<
+      | {
+          wagons_info: WagonInfoWithSeats[];
+          train_id: number;
+          global_route: string;
+          startpoint_departure: string;
+          endpoint_arrival: string;
+          detailed_route: DetailedRoute[];
+          available_seats_count: number;
+        }[]
+      | null
+    >(`${from}.${to}.${date}`);
+
+    return trains || null;
+  }
+
+  public async search({
+    from,
+    to,
+    date,
+  }: {
+    from: string;
+    to: string;
+    date: Date;
+  }) {
+    const existingTrains = await this.getTrains({
+      from,
+      to,
+      date: formatDateToString(date),
+    });
+
+    if (!existingTrains) {
+      const trains = await this.tcompanyService.getTrainsInfo({
+        startPoint: from,
+        endPoint: to,
+      });
+
+      if (!trains) {
+        return null;
+      }
+
+      for (const train of trains) {
+        const wagons = await this.tcompanyService.getWagonInfoByTrainId(
+          train.train_id,
+        );
+
+        const trainWithWagon = { ...train, wagons_info: [...wagons] };
+
+        await this.setTrains(
+          {
+            from,
+            to,
+            date: convertToYYYYMMDD(trainWithWagon.startpoint_departure),
+          },
+          trainWithWagon,
+        );
+      }
+
+      const trainsByDate = await this.getTrains({
+        from,
+        to,
+        date: formatDateToString(date),
+      });
+
+      if (!trainsByDate) {
+        return null;
+      }
+
+      return trainsByDate;
+    }
+
+    return existingTrains;
+  }
+
+  public async searchNear({
+    from,
+    to,
+    date,
+  }: {
+    from: string;
+    to: string;
+    date: Date;
+  }) {
+    const existingTrains = await this.getTrains({
+      from,
+      to,
+      date: date.toLocaleDateString(),
+    });
+
+    if (!existingTrains) {
+      return null;
+    }
+
+    // date +- 7 дней
+
+    return existingTrains;
+  }
+
+  public async inQueue() {}
+
+  public async inNearQueue() {}
+
+  public async book(trainId: number, wagonId: number, seatId: number) {
+    return await this.tcompanyService.book({ trainId, wagonId, seatId });
+  }
+
+  bookForce() {}
+}
