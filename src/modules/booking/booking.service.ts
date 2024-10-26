@@ -3,7 +3,12 @@ import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DetailedRoute, WagonInfoWithSeats } from './booking.types';
 import { convertToYYYYMMDD, formatDateToString } from '@libs/utils';
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import {
+  AmqpConnection,
+  MessageHandlerErrorBehavior,
+  RabbitPayload,
+  RabbitSubscribe,
+} from '@golevelup/nestjs-rabbitmq';
 
 @Injectable()
 export class BookingService {
@@ -180,6 +185,27 @@ export class BookingService {
       await this.amqpConnection.publish('', 'booking.queue', standQueueDto);
       this.logger.log(`${standQueueDto} added to rmq`);
     }
+  }
+
+  @RabbitSubscribe({
+    connection: 'booking.connection',
+    queue: 'booking.queue',
+    queueOptions: { durable: false, exclusive: false },
+  })
+  public async handlerQueue(
+    @RabbitPayload()
+    payload: {
+      dateFrom: string;
+      dateTo: string;
+      from: string;
+      to: string;
+      priceFrom: number;
+      priceTo: number;
+      wagonType: 'PLATZCART' | 'COUPE';
+      seatCount: number;
+    },
+  ) {
+    console.log(payload);
   }
 
   public async inNearQueue() {}
