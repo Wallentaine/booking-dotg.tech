@@ -1,9 +1,11 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Logger } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { BookingService } from './booking.service';
 
 @Controller()
 export class BookingController {
+  private readonly logger = new Logger(BookingController.name);
+
   constructor(private readonly bookingService: BookingService) {}
 
   @MessagePattern('booking.search')
@@ -52,6 +54,7 @@ export class BookingController {
     wagonType: 'COUPE' | 'PLATZCART';
     seatCount: number;
   }) {
+    this.logger.log('getted data', standQueueDto);
     await this.bookingService.standQueue(standQueueDto);
   }
 
