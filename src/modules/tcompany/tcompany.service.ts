@@ -53,7 +53,7 @@ export class TCompanyService {
     };
   }) {
     await this.cacheManager.set('tcompany.account.info', accountData, {
-      ttl: Infinity,
+      ttl: 86400 * 365 * 100,
     });
   }
 
