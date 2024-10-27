@@ -227,32 +227,11 @@ export class BookingService {
     if (!allTrains.length) {
       return new Nack(true);
     }
-    const getSeatPlace = (seat) => {
-      if (Number(seat.seatNum) % 2 === 0) {
-        return 'upper'
-      }
-      return 'lower'
-    }
+
     for (const train of allTrains) {
-      for (let wagon of train.wagons_info) {
-        if (wagon.type !== payload.wagonType) {
-            continue; // Пропустить неправильный тип вагона
-        }
-        
-        let availableSeats = [];
-        
-        for (let seat of wagon.seats) {
-            // Проверка по критериям:
-            if (
-              (!payload.priceFrom || !payload.priceTo || (seat.price >= payload.priceFrom && seat.price <= payload.priceTo))
-              && seat.bookingStatus !== 'CLOSED' || 'BOOKED') {
-                this.logger.warn('BOOK_SUCCESS')
-                return await this.book(train.train_id, wagon.wagon_id, seat.seat_id)
-            }
-        }
+      // ищем тут по параметрам, если нашли, пытаемся бронить(await this.book()) и закрываем цикл с помощью return;
     }
-  }
-  this.logger.warn('BOOK_NOT_FOUND')
+
     // усли не вышли с цикла
     return new Nack(true);
   }
