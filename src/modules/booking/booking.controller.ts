@@ -52,6 +52,7 @@ export class BookingController {
     to: string;
     priceFrom: number;
     priceTo: number;
+    preferSeat: "upper" | "lower";
     wagonType: 'COUPE' | 'PLATZCART';
     seatCount: number;
   }) {
