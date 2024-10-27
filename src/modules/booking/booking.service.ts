@@ -2,10 +2,11 @@ import { TCompanyService } from '@modules/tcompany/tcompany.service';
 import { CACHE_MANAGER, CacheStore } from '@nestjs/cache-manager';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { DetailedRoute, WagonInfoWithSeats } from './booking.types';
-import { convertToYYYYMMDD, formatDateToString } from '@libs/utils';
+import { convertToDate, convertToYYYYMMDD, formatDateToString } from '@libs/utils';
 import {
   AmqpConnection,
   MessageHandlerErrorBehavior,
+  Nack,
   RabbitPayload,
   RabbitSubscribe,
 } from '@golevelup/nestjs-rabbitmq';
@@ -174,6 +175,7 @@ export class BookingService {
   public async standQueue(standQueueDto: {
     dateFrom: string;
     dateTo: string;
+    departure_dates: string[];
     from: string;
     to: string;
     priceFrom: number;
@@ -197,15 +199,65 @@ export class BookingService {
     payload: {
       dateFrom: string;
       dateTo: string;
+      departure_dates: string[];
       from: string;
       to: string;
       priceFrom: number;
       priceTo: number;
+      preferSeat: 'upper' | 'lower'
       wagonType: 'PLATZCART' | 'COUPE';
       seatCount: number;
     },
   ) {
-    console.log(payload);
+    const allTrains = [];
+
+    for (const date of payload.departure_dates) {
+      const trains = await this.search({
+        from: payload.from,
+        to: payload.to,
+        date: convertToDate(date),
+      });
+
+      if (!trains?.length) {
+        continue;
+      }
+
+      allTrains.push(trains);
+    }
+
+    if (!allTrains.length) {
+      return new Nack(true);
+    }
+    const getSeatPlace = (seat) => {
+      if (Number(seat.seatNum) % 2 === 0) {
+        return 'upper'
+      }
+      return 'lower'
+    }
+    for (const train of allTrains) {
+      for (let wagon of train.wagons_info) {
+        if (wagon.type !== payload.wagonType) {
+            continue; // Пропустить неправильный тип вагона
+        }
+        
+        let availableSeats = [];
+        
+        for (let seat of wagon.seats) {
+            // Проверка по критериям:
+            if (
+              (!payload.priceFrom || !payload.priceTo || (seat.price >= payload.priceFrom && seat.price <= payload.priceTo))
+              && (!payload.preferSeat || getSeatPlace(seat) === payload.preferSeat)
+              && (!payload.preferSeat || (Number(seat.seatNum) % 2 !== 0 && payload.preferSeat !== 'upper')) 
+              && seat.bookingStatus !== 'CLOSED' || 'BOOKED') {
+                this.logger.warn('BOOK_SUCCESS')
+                return await this.book(train.train_id, wagon.wagon_id, seat.seat_id)
+            }
+        }
+    }
+  }
+  this.logger.warn('BOOK_NOT_FOUND')
+    // усли не вышли с цикла
+    return new Nack(true);
   }
 
   public async inNearQueue() {}

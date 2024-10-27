@@ -47,6 +47,7 @@ export class BookingController {
   public async inQueue(standQueueDto: {
     dateFrom: string;
     dateTo: string;
+    departure_dates: string[];
     from: string;
     to: string;
     priceFrom: number;

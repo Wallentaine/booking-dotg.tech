@@ -14,3 +14,11 @@ export function convertToYYYYMMDD(dateString) {
 
   return formattedDate;
 }
+
+export function convertToDate(dateString: string) {
+  const year = parseInt(dateString.slice(0, 4), 10);
+  const month = parseInt(dateString.slice(4, 6), 10) - 1; // Месяцы начинаются с 0
+  const day = parseInt(dateString.slice(6, 8), 10);
+
+  return new Date(year, month, day);
+}
