@@ -10,10 +10,10 @@ import { Train, WagonInfoWithSeats } from './tcompany.types';
 export class TCompanyService {
   private readonly logger = new Logger(TCompanyService.name);
 
-  private readonly fio: string = 'meow112 meow223 muur';
-  private readonly email: string = '.G(dotG)@gmail.com';
-  private readonly password: string = '.G(dotG)-root';
-  private readonly team: string = '.G(dotG)';
+  private readonly fio: string = 'meow112 meow1 muur12';
+  private readonly email: string = 'meow112@gmail.com';
+  private readonly password: string = 'dotmeow112-root';
+  private readonly team: string = '.dotG';
 
   constructor(
     private readonly config: ConfigSchema,
