@@ -180,7 +180,6 @@ export class BookingService {
     to: string;
     priceFrom: number;
     priceTo: number;
-    preferSeat: 'upper' | 'lower',
     wagonType: 'PLATZCART' | 'COUPE';
     seatCount: number;
   }) {
@@ -205,7 +204,6 @@ export class BookingService {
       to: string;
       priceFrom: number;
       priceTo: number;
-      preferSeat: 'upper' | 'lower'
       wagonType: 'PLATZCART' | 'COUPE';
       seatCount: number;
     },
@@ -247,8 +245,6 @@ export class BookingService {
             // Проверка по критериям:
             if (
               (!payload.priceFrom || !payload.priceTo || (seat.price >= payload.priceFrom && seat.price <= payload.priceTo))
-              && (!payload.preferSeat || getSeatPlace(seat) === payload.preferSeat)
-              && (!payload.preferSeat || (Number(seat.seatNum) % 2 !== 0 && payload.preferSeat !== 'upper')) 
               && seat.bookingStatus !== 'CLOSED' || 'BOOKED') {
                 this.logger.warn('BOOK_SUCCESS')
                 return await this.book(train.train_id, wagon.wagon_id, seat.seat_id)
