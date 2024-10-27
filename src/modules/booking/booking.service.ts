@@ -250,13 +250,11 @@ export class BookingService {
               && getSeatPlace(seat) === payload.preferSeat
               && (Number(seat.seatNum) % 2 !== 0 && payload.preferSeat !== 'upper') 
               && seat.bookingStatus !== 'CLOSED' || 'BOOKED') {
-                availableSeats.push(seat);
+                return await this.book(train.train_id, wagon.wagon_id, seat.seat_id)
             }
         }
     }
-    return null; // Ничего не найдено
-      // ищем тут по параметрам, если нашли, пытаемся бронить(await this.book()) и закрываем цикл с помощью return;
-    }
+  }
 
     // усли не вышли с цикла
     return new Nack(true);
