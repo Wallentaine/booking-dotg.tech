@@ -204,6 +204,7 @@ export class BookingService {
       to: string;
       priceFrom: number;
       priceTo: number;
+      preferSeat: 'upper' | 'lower'
       wagonType: 'PLATZCART' | 'COUPE';
       seatCount: number;
     },
@@ -227,8 +228,33 @@ export class BookingService {
     if (!allTrains.length) {
       return new Nack(true);
     }
-
+    const getSeatPlace = (seat) => {
+      if (Number(seat.seatNum) % 2 === 0) {
+        return 'upper'
+      }
+      return 'lower'
+    }
     for (const train of allTrains) {
+      for (let wagon of train.wagons_info) {
+        if (wagon.type !== payload.wagonType) {
+            continue; // Пропустить неправильный тип вагона
+        }
+        
+        let availableSeats = [];
+        
+        for (let seat of wagon.seats) {
+            // Проверка по критериям:
+            if (
+              seat.price >= payload.priceFrom 
+              && seat.price <= payload.priceTo 
+              && getSeatPlace(seat) === payload.preferSeat
+              && (Number(seat.seatNum) % 2 !== 0 && payload.preferSeat !== 'upper') 
+              && seat.bookingStatus !== 'CLOSED' || 'BOOKED') {
+                availableSeats.push(seat);
+            }
+        }
+    }
+    return null; // Ничего не найдено
       // ищем тут по параметрам, если нашли, пытаемся бронить(await this.book()) и закрываем цикл с помощью return;
     }
 
