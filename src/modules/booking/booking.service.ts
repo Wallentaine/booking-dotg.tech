@@ -245,17 +245,17 @@ export class BookingService {
         for (let seat of wagon.seats) {
             // Проверка по критериям:
             if (
-              seat.price >= payload.priceFrom 
-              && seat.price <= payload.priceTo 
-              && getSeatPlace(seat) === payload.preferSeat
-              && (Number(seat.seatNum) % 2 !== 0 && payload.preferSeat !== 'upper') 
+              (!payload.priceFrom || !payload.priceTo || (seat.price >= payload.priceFrom && seat.price <= payload.priceTo))
+              && (!payload.preferSeat || getSeatPlace(seat) === payload.preferSeat)
+              && (!payload.preferSeat || (Number(seat.seatNum) % 2 !== 0 && payload.preferSeat !== 'upper')) 
               && seat.bookingStatus !== 'CLOSED' || 'BOOKED') {
+                this.logger.warn('BOOK_SUCCESS')
                 return await this.book(train.train_id, wagon.wagon_id, seat.seat_id)
             }
         }
     }
   }
-
+    
     // усли не вышли с цикла
     return new Nack(true);
   }
