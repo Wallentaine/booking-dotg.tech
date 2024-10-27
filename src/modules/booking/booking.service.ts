@@ -255,7 +255,7 @@ export class BookingService {
         }
     }
   }
-    
+  this.logger.warn('BOOK_NOT_FOUND')
     // усли не вышли с цикла
     return new Nack(true);
   }
