@@ -180,11 +180,12 @@ export class BookingService {
     to: string;
     priceFrom: number;
     priceTo: number;
+    preferSeat: 'upper' | 'lower',
     wagonType: 'PLATZCART' | 'COUPE';
     seatCount: number;
   }) {
     for (let i = 1; i <= standQueueDto.seatCount; i++) {
-      await this.amqpConnection.publish('', 'booking.queue', standQueueDto);
+      this.amqpConnection.publish('', 'booking.queue', standQueueDto);
       this.logger.log(`${standQueueDto} added to rmq`);
     }
   }
